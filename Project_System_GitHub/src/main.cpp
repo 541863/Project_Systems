@@ -1,50 +1,42 @@
 #include "Car.hpp"
 
-#include <Arduino.h>
-#include <Servo.h>
-
 void setup()
 {}
 
 void loop()
 {
-	/* (60000 * 4) / tempo;static Car car{
-		Button(8),
-		Buzzer(7),
-		GyroScope(0, 0),
-		Infrared(0, 0, 0, 0, 0),
-		Motor(0, 0),
-		SServo(0),
-		UltraSound(0, 0)
-	};
-	static bool running = false;
-	delay(10);
-	if (car.is_button_pressed()) running = !running;
-	if (!running) { car.play_music(false); return; }
-	car.play_music(true);
-	running = false;*/
-
 	static Car car{
+		Accelerometer(A5, A4),
 		Button(4),
 		Buzzer(8),
-		GyroScope(A4, A5),
 		Infrared(9, 10, 11, 12 , 13),
 		Motor(6, 5),
 		SServo(7),
 		UltraSound(3, 2)
 	};
 	static bool running = false;
+	static bool evade = false;
 
 	if (car.is_button_pressed())
 	{
+		car.play_stopping_music(STOP_PLAYING);
+		car.play_driving_music(STOP_PLAYING);
+		
 		running = !running;
 
-		car.play_stopping_music(-1);
-		car.play_driving_music(running ? 1 : -1);
+		if (!running)
+			return;
+
+		car.play_starting_music(START_PLAYING);
+		while (!car.play_starting_music(CONTINUE_PLAYING));
+		car.play_starting_music(STOP_PLAYING);
+
+		car.play_driving_music(START_PLAYING);
 	}
 
-	car.play_driving_music(0);
-	car.play_stopping_music(0);
+	car.play_starting_music(CONTINUE_PLAYING);
+	car.play_driving_music(CONTINUE_PLAYING);
+	car.play_stopping_music(CONTINUE_PLAYING);
 
 	if (!running)
 	{
@@ -57,24 +49,20 @@ void loop()
 	{
 		car.stop();
 		car.look_straight();
-		car.play_stopping_music(1);
-		car.play_driving_music(-1);
+		car.play_driving_music(STOP_PLAYING);
+		car.play_stopping_music(START_PLAYING);
 
 		running = false;
 		return;
 	}
 
-	static bool evade = false;
 	if (car.detects_obstacle(45, 50) || evade)
 	{
-		evade = car.evade_obstacle(40, 30, 750);
+		evade = car.evade_obstacle(40, 30, 1000);
 		return;
 	}
 
-	if (car.is_only_middle_on())
-		car.move(33);
-	else
-		car.move(28);
+	car.move(car.is_only_middle_on() ? 30 : 25);
 
 	if (car.is_only_middle_on())
 		car.look_straight();

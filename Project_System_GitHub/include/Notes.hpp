@@ -7,14 +7,21 @@ typedef struct
 	int duration;
 }
 chord_t;
+
 typedef struct
 {
 	const chord_t *chords;
 	int chord_len;
-	int repeat;
 }
 melody_t;
 
+typedef enum
+{
+	START_PLAYING,
+	CONTINUE_PLAYING,
+	STOP_PLAYING
+}
+music_e;
 
 // All music needs a "#define NAME ..."
 
@@ -25,8 +32,8 @@ melody_t;
 	const chord_t NAME##_##number[] = {__VA_ARGS__}; \
 	const int NAME##_##number##_len = LEN(number);
 
-#define GET(number, repeat) \
-	{NAME##_##number, NAME##_##number##_len, repeat}
+#define GET(number) \
+	{NAME##_##number, NAME##_##number##_len}
 
 #define VAR(name) \
 	NAME##_##name

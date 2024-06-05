@@ -25,7 +25,7 @@ const chord_t take_on_me_chords[] = {
 };
 const int take_on_me_chords_len = sizeof(take_on_me_chords) / sizeof(take_on_me_chords[0]);
 
-const melody_t take_on_me = {take_on_me_chords, take_on_me_chords_len, -1};
+const melody_t take_on_me = {take_on_me_chords, take_on_me_chords_len};
 const int take_on_me_tempo = 140;
 
 #endif // TAKEONME_MUSIC_HPP

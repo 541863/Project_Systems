@@ -1,14 +1,17 @@
 #include "Car.hpp"
 
 #include <Arduino.h>
+#include <PID_v1.h>
+#include <math.h>
 
 #include "music/AtDoomGate.hpp"
 #include "music/TakeOnMe.hpp"
+#include "music/BadToTheBone.hpp"
 
-Car::Car(Button button, Buzzer buzzer, GyroScope gyroscope, Infrared infrared, Motor motor, SServo servo, UltraSound ultrasound) :
+Car::Car(Accelerometer accelerometer, Button button, Buzzer buzzer, Infrared infrared, Motor motor, SServo servo, UltraSound ultrasound) :
+	accelerometer_{accelerometer},
 	button_{button},
 	buzzer_{buzzer},
-	gyroscope_{gyroscope},
 	infrared_{infrared},
 	motor_{motor},
 	servo_{servo},
@@ -22,23 +25,56 @@ bool Car::is_button_pressed() const
 	return button_.pressed();
 }
 
-// TODO Use Enums for states.
-void Car::play_driving_music(const int state) const
+bool Car::play_starting_music(const music_e state) const
+{
+	static int index = -1;
+
+	if (state == START_PLAYING)
+	{
+		buzzer_.play(0, 0, 0, true);
+		index = 0;
+	}
+	else if ((state == CONTINUE_PLAYING && index == -1) || state == STOP_PLAYING)
+	{
+		if (state == STOP_PLAYING)
+		{
+			index = -1;
+			buzzer_.play(0, 0, 0, true);
+		}
+		return false;
+	}
+
+	const int note = bad_to_the_bone.chords[index].note;
+	const int duration = bad_to_the_bone.chords[index].duration;
+	const int tempo = bad_to_the_bone_tempo;
+	bool finished_playing_note = buzzer_.play(note, duration, tempo, false);
+
+	if (finished_playing_note) 
+		index += 1;
+
+	if (index == bad_to_the_bone.chord_len)
+	{
+		index = -1;
+		return true;
+	}
+
+	return false;
+}
+
+void Car::play_driving_music(const music_e state) const
 {
 	static int index = -1;
 	static int chord_index = 0;
-	static int repeat_count = 0;
 
-	if (state == 1)
+	if (state == START_PLAYING)
 	{
 		buzzer_.play(0, 0, 0, true);
 		index = 0;
 		chord_index = 0;
-		repeat_count = 0;
 	}
-	else if ((state == 0 && index == -1) || state == -1)
+	else if ((state == CONTINUE_PLAYING && index == -1) || state == STOP_PLAYING)
 	{
-		if (state == -1)
+		if (state == STOP_PLAYING)
 		{
 			index = -1;
 			buzzer_.play(0, 0, 0, true);
@@ -56,14 +92,7 @@ void Car::play_driving_music(const int state) const
 
 	if (chord_index == at_doom_gate[index].chord_len)
 	{
-		repeat_count += 1;
-		chord_index = 0;
-	}
-
-	if (repeat_count == at_doom_gate[index].repeat)
-	{
 		index += 1;
-		repeat_count = 0;
 		chord_index = 0;
 	}
 
@@ -71,18 +100,18 @@ void Car::play_driving_music(const int state) const
 		index = 0;
 }
 
-void Car::play_stopping_music(const int state) const
+void Car::play_stopping_music(const music_e state) const
 {
 	static int index = -1;
 
-	if (state == 1)
+	if (state == START_PLAYING)
 	{
 		buzzer_.play(0, 0, 0, true);
 		index = 0;
 	}
-	else if ((state == 0 && index == -1) || state == -1)
+	else if ((state == CONTINUE_PLAYING && index == -1) || state == STOP_PLAYING)
 	{
-		if (state == -1)
+		if (state == STOP_PLAYING)
 		{
 			index = -1;
 			buzzer_.play(0, 0, 0, true);
@@ -102,8 +131,6 @@ void Car::play_stopping_music(const int state) const
 		index = 0;
 }
 
-// TODO GyroScope
-
 int Car::is_only_middle_on() const
 {
 	return infrared_.direction() == 0b00100;
@@ -121,17 +148,26 @@ bool Car::is_any_on() const
 
 void Car::change_angle(const int slight, const int far) const
 {
+	// TODO Use PID library for better steering.
+	/*static double pid_setpoint;
+	static double pid_input;
+	static double pid_output;
+	static PID pid(&pid_input, &pid_output, &pid_setpoint, 2, 5, 1, DIRECT);*/
+
 	const int direction = infrared_.direction();
-	const int slight_angle = !!(direction & 0b01000) * (-slight) + !!(direction & 0b00010) * slight;
-	const int far_angle = !!(direction & 0b10000) * (-far) + !!(direction & 0b00001) * far;
+	const int slight_angle = !!(direction & 0b01000) * -slight + !!(direction & 0b00010) * slight;
+	const int far_angle = !!(direction & 0b10000) * -far + !!(direction & 0b00001) * far;
 
 	const int angle = (far_angle + slight_angle) / ((slight_angle != 0 && far_angle != 0) ? 2 : 1);
 	servo_.angle(angle);
 }
 
-void Car::move(const int speed) const
+void Car::move(const int speed)
 {
-	motor_.move(speed);
+	const float pitch_speed = pow(speed, accelerometer_.pitch() + 1);
+	if (pitch_speed > 100)
+		return;
+	motor_.move((const int) pitch_speed);
 }
 
 void Car::stop() const
@@ -147,39 +183,29 @@ void Car::look_straight() const
 bool Car::detects_obstacle(const int closest, const int furthest) const
 {
 	const float distance = ultrasound_.distance();
-	if (distance == NAN)
-		return false;
-
-	return distance >= closest && distance <= furthest;
+	const float is_found = distance != NAN;
+	return is_found && distance >= closest && distance <= furthest;
 }
 
 bool Car::evade_obstacle(const int speed, const int angle, const int time) const
 {
-	static int state = 0;
+	static bool is_evading = false;
 	static unsigned long prev_mil = 0;
 
-	if (state == 0)
+	if (!is_evading)
 	{
-		state = 1;
+		is_evading = true;
 		prev_mil = millis();
+		servo_.angle(-angle);
 	}
 
 	unsigned long curr_mil = millis();
 
-	motor_.move(speed);
-
-	if (state == 1 && curr_mil - prev_mil > (unsigned long) time)
-	{
-		servo_.angle(-angle);
-		state = 2;
-	}
-	
-	if (state == 2 && curr_mil - prev_mil > ((unsigned long) time * 2))
+	if (is_evading && curr_mil - prev_mil > (unsigned long) time)
 	{
 		servo_.angle(angle);
-		state = 0;
-		return true;
+		is_evading = false;
 	}
-
-	return false;
+	
+	return is_evading;
 }

@@ -4,9 +4,9 @@ project(Project_Systems LANGUAGES CXX)
 add_executable(${PROJECT_NAME} 
 	src/main.cpp
 	src/Car.cpp
+	src/component/Accelerometer.cpp
 	src/component/Button.cpp
 	src/component/Buzzer.cpp
-	src/component/GyroScope.cpp
 	src/component/Infrared.cpp
 	src/component/Motor.cpp
 	src/component/SServo.cpp

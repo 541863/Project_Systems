@@ -4,6 +4,7 @@ project(Project_Systems LANGUAGES CXX)
 add_executable(${PROJECT_NAME} 
 	src/main.cpp
 	src/Car.cpp
+
 	src/component/Accelerometer.cpp
 	src/component/Button.cpp
 	src/component/Buzzer.cpp
@@ -11,6 +12,9 @@ add_executable(${PROJECT_NAME}
 	src/component/Motor.cpp
 	src/component/SServo.cpp
 	src/component/UltraSound.cpp
+
+	src/music/BadToTheBone.cpp
+	src/music/TakeOnMe.cpp
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE include/)

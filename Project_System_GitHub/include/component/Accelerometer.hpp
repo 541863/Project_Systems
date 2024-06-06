@@ -8,7 +8,7 @@ class Accelerometer
 	public:
 		Accelerometer(const int SCL, const int SDA);
 
-		float pitch();
+		float pitch(const float out_low, const float out_high);
 	
 	private:
 		MPU9250_asukiaaa sensor_;

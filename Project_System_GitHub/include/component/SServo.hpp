@@ -8,7 +8,7 @@ class SServo
 	public:
 		SServo(const int pin);
 		void init();
-		void angle(int angle) const;
+		void angle(int angle);
 	
 	private:
 		const int pin_;

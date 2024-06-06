@@ -5,13 +5,14 @@ void setup()
 
 void loop()
 {
-	static Car car{
+	static Car car
+	{
 		Accelerometer(A5, A4),
-		Button(4),
-		Buzzer(8),
-		Infrared(9, 10, 11, 12 , 13),
-		Motor(6, 5),
-		SServo(7),
+		Button(8),
+		Buzzer(7),
+		Infrared(9, 10, 11, 12, 13),
+		Motor(5, 4),
+		SServo(6),
 		UltraSound(3, 2)
 	};
 	static bool running = false;
@@ -20,7 +21,6 @@ void loop()
 	if (car.is_button_pressed())
 	{
 		car.play_stopping_music(STOP_PLAYING);
-		car.play_driving_music(STOP_PLAYING);
 		
 		running = !running;
 
@@ -30,12 +30,9 @@ void loop()
 		car.play_starting_music(START_PLAYING);
 		while (!car.play_starting_music(CONTINUE_PLAYING));
 		car.play_starting_music(STOP_PLAYING);
-
-		car.play_driving_music(START_PLAYING);
 	}
 
 	car.play_starting_music(CONTINUE_PLAYING);
-	car.play_driving_music(CONTINUE_PLAYING);
 	car.play_stopping_music(CONTINUE_PLAYING);
 
 	if (!running)
@@ -49,20 +46,20 @@ void loop()
 	{
 		car.stop();
 		car.look_straight();
-		car.play_driving_music(STOP_PLAYING);
 		car.play_stopping_music(START_PLAYING);
 
 		running = false;
 		return;
 	}
 
+	const int speed = car.is_only_middle_on() ? 50 : 40;
+	car.move(speed, 0.0, 0.5);
+
 	if (car.detects_obstacle(45, 50) || evade)
 	{
-		evade = car.evade_obstacle(40, 30, 1000);
+		evade = car.evade_obstacle(30, 750);
 		return;
 	}
-
-	car.move(car.is_only_middle_on() ? 30 : 25);
 
 	if (car.is_only_middle_on())
 		car.look_straight();

@@ -8,13 +8,6 @@ typedef struct
 }
 chord_t;
 
-typedef struct
-{
-	const chord_t *chords;
-	int chord_len;
-}
-melody_t;
-
 typedef enum
 {
 	START_PLAYING,
@@ -23,20 +16,15 @@ typedef enum
 }
 music_e;
 
-// All music needs a "#define NAME ..."
+#define CREATE(name, number, address, previous_len, ...) \
+	const chord_t name##_##number[] = {__VA_ARGS__}; \
+	const int name##_##number##_len = sizeof(name##_##number) / sizeof(name##_##number[0]); \
+	EEPROM.put(address + (number - 1) * sizeof(int) + previous_len * sizeof(chord_t), name##_##number##_len); \
+	for (int i = 0; i < name##_##number##_len; i++) \
+		EEPROM.put((address + number * sizeof(int) + previous_len * sizeof(chord_t)) + (i * sizeof(chord_t)), name##_##number[i]); \
+	previous_len += name##_##number##_len;
 
-#define LEN(number) \
-	sizeof(NAME##_##number) / sizeof(NAME##_##number[0])
-
-#define CREATE(number, ...) \
-	const chord_t NAME##_##number[] = {__VA_ARGS__}; \
-	const int NAME##_##number##_len = LEN(number);
-
-#define GET(number) \
-	{NAME##_##number, NAME##_##number##_len}
-
-#define VAR(name) \
-	NAME##_##name
+//#define EEPROM_INIT // Use this if the music needs to be flashed to the eeprom.
 
 #define NOTE_B0  31
 #define NOTE_C1  33

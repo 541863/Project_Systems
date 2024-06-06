@@ -1,0 +1,2 @@
+Implement the GyroScope; Hard-code the Accelerometer if all else fails.
+Fix/Do PID.

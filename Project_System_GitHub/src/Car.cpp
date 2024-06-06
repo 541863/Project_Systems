@@ -15,7 +15,7 @@ Car::Car(Accelerometer accelerometer, Button button, Buzzer buzzer, Infrared inf
 	servo_{servo},
 	ultrasound_{ultrasound},
 
-	pid_{1.0, 0.05, 0.25}
+	pid_{1.0, 1.0, 1.0} // TODO
 {
 	servo_.init();
 }
@@ -103,12 +103,19 @@ bool Car::is_any_on() const
 
 void Car::change_angle(const int slight, const int far)
 {
+	static bool init = false;
+	if (!init)
+	{
+		pid_.set(far);
+		init = true;
+	}
+
 	const int direction = infrared_.direction();
-	const int slight_angle = !!(direction & 0b01000) * slight + !!(direction & 0b00010) * -slight;
-	const int far_angle = !!(direction & 0b10000) * far + !!(direction & 0b00001) * -far;
+	const int slight_angle = !!(direction & 0b01000) * -slight + !!(direction & 0b00010) * slight;
+	const int far_angle = !!(direction & 0b10000) * -far + !!(direction & 0b00001) * far;
 
 	const int raw_angle = (far_angle + slight_angle) / ((slight_angle != 0 && far_angle != 0) ? 2 : 1);
-	const int angle = pid_.compute(raw_angle); // TODO Fix PID giving negative value as setting point.
+	const int angle = pid_.compute(raw_angle);
 
 	servo_.angle(angle);
 }

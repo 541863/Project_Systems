@@ -7,7 +7,8 @@ class PPID
 {
 	public:
 		PPID(const double kp, const double ki, const double kd);
-		double compute(const double input);
+		void set(const double far);
+		double compute(const double error);
 	
 	private:
 		double setpoint_;

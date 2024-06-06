@@ -7,12 +7,16 @@ PPID::PPID(const double kp, const double ki, const double kd) :
 	pid_{&input_, &output_, &setpoint_, kp, ki, kd, DIRECT}
 {
 	pid_.SetMode(AUTOMATIC);
-	pid_.SetOutputLimits(-30, 30);
 }
 
-double PPID::compute(const double input)
+void PPID::set(const double far)
 {
-	input_ = input;
+	pid_.SetOutputLimits(-far, far);
+}
+
+double PPID::compute(const double error)
+{
+	input_ = error;
 	pid_.Compute();
 	return output_;
 }

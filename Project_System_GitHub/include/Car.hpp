@@ -10,7 +10,6 @@
 #include "component/UltraSound.hpp"
 
 #include "Notes.hpp"
-#include "PPID.hpp"
 
 class Car
 {
@@ -19,11 +18,11 @@ class Car
 		bool is_button_pressed() const;
 		bool play_starting_music(const music_e state) const;
 		void play_stopping_music(const music_e state) const;
-		int is_only_middle_on() const;
+		bool is_only_middle_on() const;
 		bool is_all_on() const;
 		bool is_any_on() const;
 		void change_angle(const int slight, const int far);
-		void move(const int speed, const float out_low, const float out_high);
+		void move(const int speed);
 		void stop() const;
 		void look_straight();
 		bool detects_obstacle(const int closest, const int furthest) const;
@@ -37,8 +36,6 @@ class Car
 		Motor motor_;
 		SServo servo_;
 		UltraSound ultrasound_;
-
-		PPID pid_;
 };
 
 #endif // CAR_HPP

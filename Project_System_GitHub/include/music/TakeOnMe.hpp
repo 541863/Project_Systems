@@ -4,11 +4,10 @@
 class TakeOnMe
 {
 	public:
-		TakeOnMe(const int address);
+		TakeOnMe();
 		void next_note(int *note, int *duration, int *tempo, bool restart) const;
 
 	private:
-		const int address_;
 		const int tempo_;
 };
 

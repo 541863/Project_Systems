@@ -16,20 +16,29 @@ void loop()
 		UltraSound(3, 2)
 	};
 	static bool running = false;
+	static bool music = false;
 	static bool evade = false;
 
-	if (car.is_button_pressed())
+	if (car.is_button_pressed() || (car.is_button_pressed() && music))
 	{
 		car.play_stopping_music(STOP_PLAYING);
+
+		if (music)
+		{
+			music = false;
+			return;
+		}
 		
 		running = !running;
 
 		if (!running)
 			return;
 
+#ifndef STOP
 		car.play_starting_music(START_PLAYING);
 		while (!car.play_starting_music(CONTINUE_PLAYING));
 		car.play_starting_music(STOP_PLAYING);
+#endif
 	}
 
 	car.play_starting_music(CONTINUE_PLAYING);
@@ -46,18 +55,20 @@ void loop()
 	{
 		car.stop();
 		car.look_straight();
+#ifndef STOP
 		car.play_stopping_music(START_PLAYING);
+#endif
 
 		running = false;
+		music = true;
 		return;
 	}
 
-	const int speed = car.is_only_middle_on() ? 50 : 40;
-	car.move(speed, 0.0, 0.5);
+	car.move(30);
 
 	if (car.detects_obstacle(45, 50) || evade)
 	{
-		evade = car.evade_obstacle(30, 750);
+		evade = car.evade_obstacle(30, 800);
 		return;
 	}
 

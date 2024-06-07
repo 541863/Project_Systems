@@ -1,7 +1,6 @@
 #include "component/SServo.hpp"
 
 #include <Arduino.h>
-#include <PID_v1.h>
 
 SServo::SServo(const int pin) :
 	pin_{pin}

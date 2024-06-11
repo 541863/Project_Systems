@@ -10,6 +10,7 @@
 #include "component/UltraSound.hpp"
 
 #include "Notes.hpp"
+#include "PPID.hpp"
 
 class Car
 {
@@ -17,6 +18,7 @@ class Car
 		Car(Accelerometer accelerometer, Button button, Buzzer buzzer, Infrared infrared, Motor motor, SServo servo, UltraSound ultrasoundo);
 		bool is_button_pressed() const;
 		bool play_starting_music(const music_e state) const;
+		void play_driving_music(const music_e state) const;
 		void play_stopping_music(const music_e state) const;
 		bool is_only_middle_on() const;
 		bool is_all_on() const;
@@ -36,6 +38,8 @@ class Car
 		Motor motor_;
 		SServo servo_;
 		UltraSound ultrasound_;
+
+		PPID pid_;
 };
 
 #endif // CAR_HPP

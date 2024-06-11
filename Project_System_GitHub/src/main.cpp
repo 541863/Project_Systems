@@ -21,6 +21,7 @@ void loop()
 
 	if (car.is_button_pressed() || (car.is_button_pressed() && music))
 	{
+		car.play_driving_music(STOP_PLAYING);
 		car.play_stopping_music(STOP_PLAYING);
 
 		if (music)
@@ -34,14 +35,15 @@ void loop()
 		if (!running)
 			return;
 
-#ifndef STOP
 		car.play_starting_music(START_PLAYING);
 		while (!car.play_starting_music(CONTINUE_PLAYING));
 		car.play_starting_music(STOP_PLAYING);
-#endif
+
+		car.play_driving_music(START_PLAYING);
 	}
 
 	car.play_starting_music(CONTINUE_PLAYING);
+	car.play_driving_music(CONTINUE_PLAYING);
 	car.play_stopping_music(CONTINUE_PLAYING);
 
 	if (!running)
@@ -55,9 +57,8 @@ void loop()
 	{
 		car.stop();
 		car.look_straight();
-#ifndef STOP
+		car.play_driving_music(STOP_PLAYING);
 		car.play_stopping_music(START_PLAYING);
-#endif
 
 		running = false;
 		music = true;

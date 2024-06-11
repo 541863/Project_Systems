@@ -4,6 +4,7 @@
 #include <math.h>
 
 #include "music/BadToTheBone.hpp"
+#include "music/GreenHillZone.hpp"
 #include "music/TakeOnMe.hpp"
 
 Car::Car(Accelerometer accelerometer, Button button, Buzzer buzzer, Infrared infrared, Motor motor, SServo servo, UltraSound ultrasound) :
@@ -13,7 +14,9 @@ Car::Car(Accelerometer accelerometer, Button button, Buzzer buzzer, Infrared inf
 	infrared_{infrared},
 	motor_{motor},
 	servo_{servo},
-	ultrasound_{ultrasound}
+	ultrasound_{ultrasound},
+
+	pid_{1.0, 1.0, 1.0}
 {
 	servo_.init();
 }
@@ -52,6 +55,36 @@ bool Car::play_starting_music(const music_e state) const
 		is_next_note = music.next_note(&note, &duration, &tempo, false);
 
 	return !is_next_note;
+}
+
+void Car::play_driving_music(const music_e state) const
+{
+	static GreenHillZone music{};
+	static bool is_next_note = false;
+
+	static int note = 0;
+	static int duration = 0;
+	static int tempo = 0;
+
+	if (state == START_PLAYING)
+	{
+		buzzer_.play(0, 0, 0, true);
+		is_next_note = true;
+		music.next_note(&note, &duration, &tempo, true);
+	}
+	else if ((state == CONTINUE_PLAYING && !is_next_note) || state == STOP_PLAYING)
+	{
+		if (state == STOP_PLAYING)
+		{
+			buzzer_.play(0, 0, 0, true);
+			is_next_note = false;
+		}
+		return;
+	}
+
+	bool done_playing_note = buzzer_.play(note, duration, tempo, false);
+	if (done_playing_note)
+		music.next_note(&note, &duration, &tempo, false);
 }
 
 void Car::play_stopping_music(const music_e state) const
@@ -101,11 +134,19 @@ bool Car::is_any_on() const
 
 void Car::change_angle(const int slight, const int far)
 {
+	static bool init = false;
+	if (!init)
+	{
+		pid_.set(far);
+		init = true;
+	}
+
 	const int direction = infrared_.direction();
 	const int slight_angle = !!(direction & 0b01000) * -slight + !!(direction & 0b00010) * slight;
 	const int far_angle = !!(direction & 0b10000) * -far + !!(direction & 0b00001) * far;
 
-	const int angle = (far_angle + slight_angle) / ((slight_angle != 0 && far_angle != 0) ? 2 : 1);
+	const int raw_angle = (far_angle + slight_angle) / ((slight_angle != 0 && far_angle != 0) ? 2 : 1);
+	const int angle = pid_.compute(raw_angle);
 
 	servo_.angle(angle);
 }

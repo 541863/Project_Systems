@@ -7,14 +7,14 @@
 #include "music/GreenHillZone.hpp"
 #include "music/TakeOnMe.hpp"
 
-Car::Car(Accelerometer accelerometer, Button button, Buzzer buzzer, Infrared infrared, Motor motor, SServo servo, UltraSound ultrasound) :
+Car::Car(Accelerometer accelerometer, Button button/*, Buzzer buzzer*/, Infrared infrared, Motor motor, SServo servo/*, UltraSound ultrasound*/) :
 	accelerometer_{accelerometer},
 	button_{button},
-	buzzer_{buzzer},
+	//buzzer_{buzzer},
 	infrared_{infrared},
 	motor_{motor},
 	servo_{servo},
-	ultrasound_{ultrasound},
+	//ultrasound_{ultrasound},
 
 	pid_{1.0, 1.0, 1.0}
 {
@@ -26,6 +26,7 @@ bool Car::is_button_pressed() const
 	return button_.pressed();
 }
 
+/*
 bool Car::play_starting_music(const music_e state) const
 {
 	static BadToTheBone music{};
@@ -116,6 +117,7 @@ void Car::play_stopping_music(const music_e state) const
 	if (done_playing_note)
 		music.next_note(&note, &duration, &tempo, false);
 }
+*/
 
 bool Car::is_only_middle_on() const
 {
@@ -134,19 +136,19 @@ bool Car::is_any_on() const
 
 void Car::change_angle(const int slight, const int far)
 {
-	static bool init = false;
+	/*static bool init = false;
 	if (!init)
 	{
 		pid_.set(far);
 		init = true;
-	}
+	}*/
 
 	const int direction = infrared_.direction();
 	const int slight_angle = !!(direction & 0b01000) * -slight + !!(direction & 0b00010) * slight;
 	const int far_angle = !!(direction & 0b10000) * -far + !!(direction & 0b00001) * far;
 
 	const int raw_angle = (far_angle + slight_angle) / ((slight_angle != 0 && far_angle != 0) ? 2 : 1);
-	const int angle = pid_.compute(raw_angle);
+	const int angle = raw_angle;//pid_.compute(raw_angle);
 
 	servo_.angle(angle);
 }
@@ -160,7 +162,7 @@ void Car::move(const int speed)
 		look_straight();
 		motor_.move(speed);
 	}
-	else if (pitched_speed <= 200)
+	else if (pitched_speed <= 255)
 		motor_.move(pitched_speed);
 }
 
@@ -174,6 +176,7 @@ void Car::look_straight()
 	servo_.angle(0);
 }
 
+/*
 bool Car::detects_obstacle(const int closest, const int furthest) const
 {
 	const float distance = ultrasound_.distance();
@@ -208,3 +211,4 @@ bool Car::evade_obstacle(const int angle, const int time)
 	
 	return is_evading;
 }
+*/

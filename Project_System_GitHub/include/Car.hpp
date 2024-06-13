@@ -15,11 +15,11 @@
 class Car
 {
 	public:
-		Car(Accelerometer accelerometer, Button button, Buzzer buzzer, Infrared infrared, Motor motor, SServo servo, UltraSound ultrasoundo);
+		Car(Accelerometer accelerometer, Button button/*, Buzzer buzzer*/, Infrared infrared, Motor motor, SServo servo/*, UltraSound ultrasoundo*/);
 		bool is_button_pressed() const;
-		bool play_starting_music(const music_e state) const;
+		/*bool play_starting_music(const music_e state) const;
 		void play_driving_music(const music_e state) const;
-		void play_stopping_music(const music_e state) const;
+		void play_stopping_music(const music_e state) const;*/
 		bool is_only_middle_on() const;
 		bool is_all_on() const;
 		bool is_any_on() const;
@@ -27,17 +27,17 @@ class Car
 		void move(const int speed);
 		void stop() const;
 		void look_straight();
-		bool detects_obstacle(const int closest, const int furthest) const;
-		bool evade_obstacle(const int angle, const int time);
+		/*bool detects_obstacle(const int closest, const int furthest) const;
+		bool evade_obstacle(const int angle, const int time);*/
 
 	private:
 		Accelerometer accelerometer_;
 		Button button_;
-		Buzzer buzzer_;
+		//Buzzer buzzer_;
 		Infrared infrared_;
 		Motor motor_;
 		SServo servo_;
-		UltraSound ultrasound_;
+		//UltraSound ultrasound_;
 
 		PPID pid_;
 };
